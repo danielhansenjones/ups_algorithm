@@ -68,8 +68,17 @@ def main():
     load_packages_into_hash(ht, 'Data/Packages.csv')
 
     # Create vehicle objects
-    vehicle1 = Vehicle(16, 18, None, [], 0.0, "4001 South 700 East", datetime.timedelta(hours=8))
-    vehicle2 = Vehicle(16, 18, None, [], 0.0, "4001 South 700 East", datetime.timedelta(hours=10, minutes=20))
+    # Create truck object truck1
+    vehicle1 = Vehicle(16, 18, None, [1, 2, 5, 7, 8, 10, 13, 14, 15, 16, 19, 20, 29, 30, 31], 0.0,
+                       "4001 South 700 East", datetime.timedelta(hours=8))
+
+    # Create truck object truck2
+    vehicle2 = Vehicle(16, 18, None, [3, 4, 9, 11, 12, 17, 18, 22, 23, 24, 26, 27, 35, 36, 38, 39], 0.0,
+                       "4001 South 700 East", datetime.timedelta(hours=10, minutes=20))
+
+    # Create truck object truck3
+    vehicle3 = Vehicle(16, 18, None, [6, 21, 25, 28, 32, 33, 34, 37, 40], 0.0,
+                       "4001 South 700 East", datetime.timedelta(hours=9, minutes=5))
 
     # All packages
     all_packages = list(map(str, range(1, 41)))  # assuming 40 packages from 1 to 40
