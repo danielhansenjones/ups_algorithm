@@ -1,16 +1,14 @@
-class Vehicle:
-    def __init__(self, max_load, velocity, cargo, shipments, distance_covered, location_index,
-                 departure_time, current_address=None):
-        self.max_load = max_load
-        self.velocity = velocity
-        self.cargo = cargo
-        self.shipments = shipments
-        self.distance_covered = distance_covered
-        self.location_index = location_index  # Index of the current location in the addresses list
-        self.departure_time = departure_time
-        self.current_address = current_address  # Actual address of the current location
 
-    def __str__(self):
-        return "%s, %s, %s, %s, %s, %s, %s, %s" % (self.max_load, self.velocity, self.cargo, self.shipments,
-                                                   self.distance_covered, self.location_index, self.departure_time,
-                                                   self.current_address)
+class Vehicle:
+    def __init__(self, id, max_capacity, location, shipments, velocity, current_time, distance_covered):
+        self.id = id
+        self.max_capacity = max_capacity
+        self.location = location  # starting location
+        self.shipments = shipments  # initial assigned packages for delivery
+        self.delivered_packages = []  # list to hold packages that have been delivered
+        self.velocity = velocity
+        self.current_time = current_time
+        self.distance_covered = distance_covered
+
+    def deliver_package(self, package_id):
+        self.delivered_packages.append(package_id)
