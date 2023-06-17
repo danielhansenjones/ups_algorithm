@@ -9,3 +9,4 @@ class Package:
         self.weight = weight
         self.notes = notes
         self.status = "At hub"
+        self.delivered = False

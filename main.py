@@ -50,102 +50,101 @@ def check_package_status(hashtable, package_id, time):
         return "Package not found"
 
 
-def calculate_route(vehicle, distances, packages, hashtable, address_list):
-    current_location = 0
-    vehicle.current_address = address_list[current_location][2]
-    vehicle.current_time = datetime.datetime.now()
+def distance_between_addresses(address_id_1, address_id_2, distance_data, address_data):
+    address_1 = next((address for address in address_data if address[0] == address_id_1), None)
+    address_2 = next((address for address in address_data if address[0] == address_id_2), None)
 
-    while packages:
-        next_package_id = min(
-            packages,
-            key=lambda p: distances[current_location][int(p) - 1]
-            if distances[current_location][int(p) - 1] is not None
-            else float('inf')
-        )
+    if address_1 is None or address_2 is None:
+        return None
 
-        next_package = hashtable.get(int(next_package_id))
-        next_location = next((i for i, address in enumerate(address_list) if address[2] == next_package.address), None)
+    distance = distance_data[address_id_1 - 1][address_id_2 - 1]  # assuming ids are 1-indexed
 
-        # Initializing travel_distance and travel_time
-        travel_distance = 0
-        travel_time = 0
+    if distance is None:  # If the distance is None, try the reverse
+        distance = distance_data[address_id_2 - 1][address_id_1 - 1]
 
-        if distances[current_location][next_location] is not None:
-            travel_distance = distances[current_location][next_location]
-            travel_time = travel_distance / vehicle.velocity  # in hours
+    return address_1, address_2, distance
 
-        # Updating status and time of the package
-        next_package.status = "In transit"
-        vehicle.update_time(travel_time)
 
-        vehicle.shipments.append(next_package)
-        packages.remove(next_package_id)
+def calculate_route(truck, hashtable, addresses, distances):
+    # Initialize variables
+    not_delivered = []
+    truck_address_index = None
+    for address in addresses:
+        if address[2] == truck.current_address:
+            truck_address_index = address[0]
+            break
 
-        # Update the current location and address
-        current_location = next_location
-        vehicle.current_address = address_list[current_location][2]
+    # Extract package details into not_delivered list
+    for shipment in truck.shipments:
+        package = hashtable.get(shipment)
+        not_delivered.append(package)
 
-        # Mark package as delivered and update the delivery time
-        next_package.status = "Delivered"
-        vehicle.update_time(travel_time)
+    # Clear the package list of a given truck so the packages can be placed back into the truck in the order
+    truck.shipments.clear()
 
-        # Update the current time and distance covered
-        vehicle.current_time += datetime.timedelta(hours=travel_time)
-        vehicle.distance_covered += travel_distance
+    while len(not_delivered) > 0:
+        nearest_distance = float('inf')
+        nearest_package = None
 
-        # Log the delivery information to the console
-        delivery_time = vehicle.current_time.strftime("%Y-%m-%d %H:%M:%S")
-        log_message = f"Package {next_package_id} delivered to {next_package.address} at {delivery_time}"
-        print(log_message)
+        for package in not_delivered:
+            package_address_index = None
+            for address in addresses:
+                if address[2] == package.address:
+                    package_address_index = address[0]
+                    break
 
-    return vehicle
+            # Calculate distance from the current truck location to the package address
+            distance = distances[truck_address_index - 1][package_address_index - 1]
+
+            # Select the nearest package
+            if distance < nearest_distance:
+                nearest_distance = distance
+                nearest_package = package
+
+        # Add nearest package to the truck shipments
+        truck.shipments.append(nearest_package.package_id)
+
+        # Remove the package from the not_delivered list
+        not_delivered.remove(nearest_package)
+
+        # Update truck's current address attribute to the package it drove to
+        truck.current_address = nearest_package.address
+
+        # Update the time it took for the truck to drive to the nearest package
+        delivery_time = datetime.timedelta(hours=nearest_distance / 18)
+        truck.current_time += delivery_time
+
+        # Log delivery details
+        print("Truck {} delivered package {} to {} at {}. Distance traveled: {}".format(
+            truck.id, nearest_package.package_id, nearest_package.address, truck.current_time, nearest_distance))
+
+    return truck
 
 
 def main():
     # Create a hashtable with 20 buckets
     ht = HashTable(20)
     distances = load_distance_data('Data/Distances.csv')
-
     # Load the packages from the CSV file into the hashtable
     load_packages_into_hash(ht, 'Data/Packages.csv')
 
     addresses = load_address_data('Data/Addresses.csv')
 
     # Create vehicle objects
-    vehicle1 = Vehicle(16, 18, None, [1, 2, 5, 7, 8, 10, 13, 14, 15, 16, 19, 20, 29, 30, 31], 0.0,
+    vehicle1 = Vehicle(1, 16, 18, None, [1, 2, 5, 7, 8, 10, 13, 14, 15, 16, 19, 20, 29, 30, 31], 0.0,
                        datetime.timedelta(hours=8), "4001 South 700 East")
 
-    vehicle2 = Vehicle(16, 18, None, [3, 4, 9, 11, 12, 17, 18, 22, 23, 24, 26, 27, 35, 36, 38, 39], 0.0,
+    vehicle2 = Vehicle(2, 16, 18, None, [3, 4, 9, 11, 12, 17, 18, 22, 23, 24, 26, 27, 35, 36, 38, 39], 0.0,
                        datetime.timedelta(hours=10, minutes=20), "4001 South 700 East")
 
-    vehicle3 = Vehicle(16, 18, None, [6, 21, 25, 28, 32, 33, 34, 37, 40], 0.0,
+    vehicle3 = Vehicle(3, 16, 18, None, [6, 21, 25, 28, 32, 33, 34, 37, 40], 0.0,
                        datetime.timedelta(hours=9, minutes=5), "4001 South 700 East")
 
-    # All packages
-    all_packages = [str(i) for i in range(1, ht.size + 1)]  # assuming packages from 1 to hashtable size
+    calculate_route(vehicle1, ht, addresses, distances)
 
-    # Calculate routes for vehicles
-    packages_for_vehicle1 = copy.deepcopy(all_packages)
-    calculate_route(vehicle1, distances, packages_for_vehicle1, ht, addresses)
+    calculate_route(vehicle2, ht, addresses, distances)
 
-    packages_for_vehicle2 = [p for p in all_packages if p not in vehicle1.shipments]
-    calculate_route(vehicle2, distances, packages_for_vehicle2, ht, addresses)
-
-    packages_for_vehicle3 = [p for p in all_packages if p not in vehicle1.shipments and p not in vehicle2.shipments]
-    calculate_route(vehicle3, distances, packages_for_vehicle3, ht, addresses)
-
-    # If there are still packages left undelivered
-    while len(vehicle1.shipments) + len(vehicle2.shipments) + len(vehicle3.shipments) < len(all_packages):
-        # Determine the vehicle that finished their route earlier and assign new packages to that vehicle
-        if vehicle1.current_time < vehicle2.current_time and vehicle1.current_time < vehicle3.current_time:
-            undelivered_packages = [p for p in all_packages if p not in vehicle1.shipments]
-            calculate_route(vehicle1, distances, undelivered_packages, ht, addresses)
-        elif vehicle2.current_time < vehicle3.current_time:
-            undelivered_packages = [p for p in all_packages if p not in vehicle2.shipments]
-            calculate_route(vehicle2, distances, undelivered_packages, ht, addresses)
-        else:
-            undelivered_packages = [p for p in all_packages if p not in vehicle3.shipments]
-            calculate_route(vehicle3, distances, undelivered_packages, ht, addresses)
+    calculate_route(vehicle3, ht, addresses, distances)
 
     # Output the shipments of each vehicle
     print("Vehicle 1 shipments: ", vehicle1.shipments)
