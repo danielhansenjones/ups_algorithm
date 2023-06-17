@@ -30,12 +30,12 @@ def load_distance_data(filename):
 
 
 def load_address_data(filename):
-    addresses = {}
+    addresses = []
     with open(filename, newline='') as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
             id, name, address = row[0], row[1], row[2]
-            addresses[address] = int(id)  # convert id to integer
+            addresses.append((int(id), name, address))  # convert id to integer
     return addresses
 
 
@@ -50,44 +50,55 @@ def check_package_status(hashtable, package_id, time):
         return "Package not found"
 
 
-def calculate_route(vehicle, distances, packages, ht, addresses):
-    start_time = vehicle.current_time
+def calculate_route(vehicle, distances, packages, hashtable, address_list):
+    current_location = 0
+    vehicle.current_address = address_list[current_location][2]
+    vehicle.current_time = datetime.datetime.now()
 
-    for package_id in packages:
-        package = ht.get(package_id)
+    while packages:
+        next_package_id = min(
+            packages,
+            key=lambda p: distances[current_location][int(p) - 1]
+            if distances[current_location][int(p) - 1] is not None
+            else float('inf')
+        )
 
-        if package is None:
-            print(f"Package {package_id} not found in hashtable")
-            continue
+        next_package = hashtable.get(int(next_package_id))
+        next_location = next((i for i, address in enumerate(address_list) if address[2] == next_package.address), None)
 
-        current_location = vehicle.location
-        next_location = addresses.get(package.address)
+        # Initializing travel_distance and travel_time
+        travel_distance = 0
+        travel_time = 0
 
-        # Add check for unreachable address
-        if next_location is None:
-            print(f"Address {package.address} not found in address list. Skipping this package.")
-            continue
+        if distances[current_location][next_location] is not None:
+            travel_distance = distances[current_location][next_location]
+            travel_time = travel_distance / vehicle.velocity  # in hours
 
-        if distances[current_location][next_location] is None:
-            print(f"No route from {current_location} to {next_location}")
-            continue
-        travel_distance = distances[current_location][next_location]
-        travel_time = travel_distance / vehicle.velocity  # travel time in hours
+        # Updating status and time of the package
+        next_package.status = "In transit"
+        vehicle.update_time(travel_time)
 
-        # calculate time as timedelta and add to vehicle's current time
-        travel_time = datetime.timedelta(hours=travel_time)
-        vehicle.current_time += travel_time
+        vehicle.shipments.append(next_package)
+        packages.remove(next_package_id)
+
+        # Update the current location and address
+        current_location = next_location
+        vehicle.current_address = address_list[current_location][2]
+
+        # Mark package as delivered and update the delivery time
+        next_package.status = "Delivered"
+        vehicle.update_time(travel_time)
+
+        # Update the current time and distance covered
+        vehicle.current_time += datetime.timedelta(hours=travel_time)
         vehicle.distance_covered += travel_distance
 
-        # deliver the package
-        vehicle.location = next_location
-        package.status = 'Delivered'
+        # Log the delivery information to the console
+        delivery_time = vehicle.current_time.strftime("%Y-%m-%d %H:%M:%S")
+        log_message = f"Package {next_package_id} delivered to {next_package.address} at {delivery_time}"
+        print(log_message)
 
-        # Log delivery
-        print(f"Vehicle {vehicle.id} delivered package {package.id} at {vehicle.current_time}.")
-
-        # Update delivered packages
-        vehicle.deliver_package(package.id)
+    return vehicle
 
 
 def main():
@@ -97,18 +108,18 @@ def main():
 
     # Load the packages from the CSV file into the hashtable
     load_packages_into_hash(ht, 'Data/Packages.csv')
-    print(ht)
+
     addresses = load_address_data('Data/Addresses.csv')
 
     # Create vehicle objects
     vehicle1 = Vehicle(16, 18, None, [1, 2, 5, 7, 8, 10, 13, 14, 15, 16, 19, 20, 29, 30, 31], 0.0,
-                       datetime.timedelta(hours=8), 0)
+                       datetime.timedelta(hours=8), "4001 South 700 East")
 
     vehicle2 = Vehicle(16, 18, None, [3, 4, 9, 11, 12, 17, 18, 22, 23, 24, 26, 27, 35, 36, 38, 39], 0.0,
-                       datetime.timedelta(hours=10, minutes=20), 0)
+                       datetime.timedelta(hours=10, minutes=20), "4001 South 700 East")
 
     vehicle3 = Vehicle(16, 18, None, [6, 21, 25, 28, 32, 33, 34, 37, 40], 0.0,
-                       datetime.timedelta(hours=9, minutes=5), 0)
+                       datetime.timedelta(hours=9, minutes=5), "4001 South 700 East")
 
     # All packages
     all_packages = [str(i) for i in range(1, ht.size + 1)]  # assuming packages from 1 to hashtable size

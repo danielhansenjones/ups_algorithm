@@ -1,14 +1,26 @@
+import datetime
+
 
 class Vehicle:
-    def __init__(self, id, max_capacity, location, shipments, velocity, current_time, distance_covered):
-        self.id = id
-        self.max_capacity = max_capacity
-        self.location = location  # starting location
-        self.shipments = shipments  # initial assigned packages for delivery
-        self.delivered_packages = []  # list to hold packages that have been delivered
+    def __init__(self, max_load, velocity, cargo, shipments, distance_covered, departure_time, current_address=None,
+                 current_time=None):
+        self.max_load = max_load
         self.velocity = velocity
-        self.current_time = current_time
+        self.cargo = cargo
+        self.shipments = shipments
         self.distance_covered = distance_covered
+        self.current_address = current_address  # Actual address of the current location
+        self.departure_time = departure_time
+        if current_time is None:
+            self.current_time = datetime.timedelta(hours=0)
+        else:
+            self.current_time = current_time
 
-    def deliver_package(self, package_id):
-        self.delivered_packages.append(package_id)
+    def __str__(self):
+        return "%s, %s, %s, %s, %s, %s, %s, %s" % (self.max_load, self.velocity, self.cargo,
+                                                   self.shipments, self.distance_covered,
+                                                   self.departure_time, self.current_address,
+                                                   self.current_time)
+
+    def update_time(self, travel_time):
+        self.departure_time += datetime.timedelta(hours=travel_time)
