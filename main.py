@@ -19,6 +19,17 @@ def load_packages_into_hash(hashtable, filename):
             hashtable.set(key, package)
 
 
+def floyd_warshall(distances):
+    num_nodes = len(distances)
+    for k in range(num_nodes):
+        for i in range(num_nodes):
+            for j in range(num_nodes):
+                if distances[i][k] is not None and distances[k][j] is not None:
+                    if distances[i][j] is None or distances[i][j] > distances[i][k] + distances[k][j]:
+                        distances[i][j] = distances[i][k] + distances[k][j]
+    return distances
+
+
 def load_distance_data(filename):
     distances = []
     with open(filename, newline='') as csvfile:
@@ -56,10 +67,14 @@ def distance_between_addresses(address_id_1, address_id_2, distance_data, addres
     if address_1 is None or address_2 is None:
         return None
 
-    distance = distance_data[address_id_1][address_id_2]  # assuming ids are 1-indexed
+    distance = distance_data[address_id_1][address_id_2]
 
     if distance is None:  # If the distance is None, try the reverse
         distance = distance_data[address_id_2][address_id_1]
+
+    if distance is None:  # if the distance is still None, warn and return None
+        print(f"Warning: Distance between {address_id_1} and {address_id_2} is not defined.")
+        return address_1, address_2, None  # or you can return an error/exception here
 
     return address_1, address_2, distance
 
@@ -77,7 +92,8 @@ def calculate_return_trip(truck, last_package_address, depot_address, distances,
         if depot_address_index is not None and last_package_address_index is not None:
             break
 
-    _, _, return_distance = distance_between_addresses(last_package_address_index, depot_address_index, distances, addresses)
+    _, _, return_distance = distance_between_addresses(last_package_address_index, depot_address_index, distances,
+                                                       addresses)
 
     if return_distance is not None:  # if there is a valid distance
         return_time = datetime.timedelta(hours=return_distance / truck.velocity)
@@ -85,6 +101,12 @@ def calculate_return_trip(truck, last_package_address, depot_address, distances,
         truck.total_distance += return_distance
 
     return truck
+
+
+def extract_address(address, addresses):
+    for row in addresses:
+        if address in row[2]:
+            return int(row[0])
 
 
 def calculate_route(truck, hashtable, addresses, distances):
@@ -153,11 +175,38 @@ def calculate_route(truck, hashtable, addresses, distances):
     return truck, total_distance
 
 
+def total_distance(route, addresses, distances):
+    total = 0
+    for i in range(len(route) - 1):
+        _, _, distance = distance_between_addresses(route[i], route[i+1], distances, addresses)
+        if distance is not None:
+            total += distance
+    return total
+
+
+def two_opt(route):
+    best = route
+    improved = True
+    while improved:
+        improved = False
+        for i in range(1, len(route) - 2):
+            for j in range(i + 1, len(route)):
+                if j - i == 1: continue  # changes nothing, skip then
+                new_route = route[:]
+                new_route[i:j] = route[j - 1:i - 1:-1]  # this is the 2-optSwap
+                if total_distance(new_route) < total_distance(best):
+                    best = new_route
+                    improved = True
+        route = best
+    return best
+
 
 def main():
     # Create a hashtable with 20 buckets
     ht = HashTable()
     distances = load_distance_data('Data/Distances.csv')
+    # Floyd-Warshall algorithm has a time complexity of O(N^3),
+    distances = floyd_warshall(distances)
     # Load the packages from the CSV file into the hashtable
     load_packages_into_hash(ht, 'Data/Packages.csv')
 
