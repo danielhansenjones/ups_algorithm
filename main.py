@@ -153,6 +153,7 @@ def calculate_route(truck, hashtable, addresses, distances):
     return truck, total_distance
 
 
+
 def main():
     # Create a hashtable with 20 buckets
     ht = HashTable()
