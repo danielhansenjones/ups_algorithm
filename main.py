@@ -65,6 +65,8 @@ def distance_between_addresses(address_id_1, address_id_2, distance_data, addres
 
 
 def calculate_route(truck, hashtable, addresses, distances):
+    print("Addresses:", addresses)
+    print("Distances:", distances)
     not_delivered = []
     truck_address_index = None
 
@@ -139,6 +141,7 @@ def calculate_route(truck, hashtable, addresses, distances):
     truck.total_distance = total_distance
 
     return truck, total_distance
+
 
 def main():
             # Create a hashtable with 20 buckets
