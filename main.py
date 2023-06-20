@@ -1,4 +1,3 @@
-import copy
 import csv
 import datetime
 from HashTable import HashTable
@@ -66,25 +65,25 @@ def distance_between_addresses(address_id_1, address_id_2, distance_data, addres
 
 
 def calculate_route(truck, hashtable, addresses, distances):
-    # Initialize variables
     not_delivered = []
     truck_address_index = None
+
     for address in addresses:
         if address[2] == truck.current_address:
             truck_address_index = address[0]
             break
 
-    # Extract package details into not_delivered list
     for shipment in truck.shipments:
         package = hashtable.get(shipment)
         not_delivered.append(package)
 
-    # Clear the package list of a given truck so the packages can be placed back into the truck in the order
     truck.shipments.clear()
+    total_distance = 0.0
 
     while len(not_delivered) > 0:
         nearest_distance = float('inf')
         nearest_package = None
+        nearest_package_address_index = None
 
         for package in not_delivered:
             package_address_index = None
@@ -93,67 +92,92 @@ def calculate_route(truck, hashtable, addresses, distances):
                     package_address_index = address[0]
                     break
 
-            # Calculate distance from the current truck location to the package address
+            if package_address_index is None:
+                continue
+
             distance = distances[truck_address_index - 1][package_address_index - 1]
 
-            # Select the nearest package
-            if distance < nearest_distance:
+            if package_address_index == truck_address_index and distance < nearest_distance:
                 nearest_distance = distance
                 nearest_package = package
+                nearest_package_address_index = package_address_index
 
-        # Add nearest package to the truck shipments
+        if nearest_package is None:
+            for package in not_delivered:
+                package_address_index = None
+                for address in addresses:
+                    if address[2] == package.address:
+                        package_address_index = address[0]
+                        break
+
+                if package_address_index is None:
+                    continue
+
+                distance = distances[truck_address_index - 1][package_address_index - 1]
+
+                if distance < nearest_distance:
+                    nearest_distance = distance
+                    nearest_package = package
+                    nearest_package_address_index = package_address_index
+
+        if nearest_package is None:
+            break
+
         truck.shipments.append(nearest_package.package_id)
-
-        # Remove the package from the not_delivered list
         not_delivered.remove(nearest_package)
 
-        # Update truck's current address attribute to the package it drove to
+        if nearest_distance > 0:
+            delivery_time = datetime.timedelta(hours=nearest_distance / truck.velocity)
+            truck.current_time += delivery_time
+            total_distance += nearest_distance
+
         truck.current_address = nearest_package.address
 
-        # Update the time it took for the truck to drive to the nearest package
-        delivery_time = datetime.timedelta(hours=nearest_distance / 18)
-        truck.current_time += delivery_time
-
-        # Log delivery details
         print("Truck {} delivered package {} to {} at {}. Distance traveled: {}".format(
             truck.id, nearest_package.package_id, nearest_package.address, truck.current_time, nearest_distance))
 
-    return truck
+    truck.total_distance = total_distance
 
+    return truck, total_distance
 
 def main():
-    # Create a hashtable with 20 buckets
-    ht = HashTable(20)
-    distances = load_distance_data('Data/Distances.csv')
-    # Load the packages from the CSV file into the hashtable
-    load_packages_into_hash(ht, 'Data/Packages.csv')
+            # Create a hashtable with 20 buckets
+            ht = HashTable()
+            distances = load_distance_data('Data/Distances.csv')
+            # Load the packages from the CSV file into the hashtable
+            load_packages_into_hash(ht, 'Data/Packages.csv')
 
-    addresses = load_address_data('Data/Addresses.csv')
+            addresses = load_address_data('Data/Addresses.csv')
 
-    # Create vehicle objects
-    vehicle1 = Vehicle(1, 16, 18, None, [1, 2, 5, 7, 8, 10, 13, 14, 15, 16, 19, 20, 29, 30, 31], 0.0,
-                       datetime.timedelta(hours=8), "4001 South 700 East")
+            # Create vehicle objects
+            vehicle1 = Vehicle(1, 16, 18, None, [15, 13, 20, 37, 14, 34, 30, 16, 31, 40, 7, 6, 32], 0.0,
+                               datetime.timedelta(hours=8), "4001 South 700 East")
 
-    vehicle2 = Vehicle(2, 16, 18, None, [3, 4, 9, 11, 12, 17, 18, 22, 23, 24, 26, 27, 35, 36, 38, 39], 0.0,
-                       datetime.timedelta(hours=10, minutes=20), "4001 South 700 East")
+            vehicle2 = Vehicle(2, 16, 18, None, [3, 18, 36, 38, 23, 27, 35, 24, 19, 17, 21, 22, 26, 2, 33], 0.0,
+                               datetime.timedelta(hours=10, minutes=20), "4001 South 700 East")
 
-    vehicle3 = Vehicle(3, 16, 18, None, [6, 21, 25, 28, 32, 33, 34, 37, 40], 0.0,
-                       datetime.timedelta(hours=9, minutes=5), "4001 South 700 East")
+            vehicle3 = Vehicle(3, 16, 18, None, [5, 8, 11, 28, 25, 12, 4, 9, 1, 29, 10, 39], 0.0,
+                               datetime.timedelta(hours=9, minutes=5), "4001 South 700 East")
 
-    calculate_route(vehicle1, ht, addresses, distances)
+            vehicle1, distance1 = calculate_route(vehicle1, ht, addresses, distances)
+            vehicle2, distance2 = calculate_route(vehicle2, ht, addresses, distances)
+            vehicle3, distance3 = calculate_route(vehicle3, ht, addresses, distances)
 
-    calculate_route(vehicle2, ht, addresses, distances)
+            # Calculate total distance for all three trucks
+            total_distance = distance1 + distance2 + distance3
+            print("Total distance traveled for all three trucks: {}".format(round(total_distance, 1)))
 
-    calculate_route(vehicle3, ht, addresses, distances)
-
-    # Output the shipments of each vehicle
-    print("Vehicle 1 shipments: ", vehicle1.shipments)
-    print("Vehicle 2 shipments: ", vehicle2.shipments)
-    print("Vehicle 3 shipments: ", vehicle3.shipments)
-    print("Vehicle 1 current time: ", vehicle1.current_time)
-    print("Vehicle 2 current time: ", vehicle2.current_time)
-    print("Vehicle 3 current time: ", vehicle3.current_time)
-
+            # Output the shipments of each vehicle
+            print("Vehicle 1 shipments: ", vehicle1.shipments)
+            print("Vehicle 2 shipments: ", vehicle2.shipments)
+            print("Vehicle 3 shipments: ", vehicle3.shipments)
+            print("Vehicle 1 current time: ", vehicle1.current_time)
+            print("Vehicle 2 current time: ", vehicle2.current_time)
+            print("Vehicle 3 current time: ", vehicle3.current_time)
+            print("Vehicle 1 total distance: ", vehicle1.total_distance)
+            print("Vehicle 2 total distance: ", vehicle2.total_distance)
+            print("Vehicle 3 total distance: ", vehicle3.total_distance)
 
 if __name__ == "__main__":
-    main()
+            main()
+
