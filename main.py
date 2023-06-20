@@ -64,9 +64,30 @@ def distance_between_addresses(address_id_1, address_id_2, distance_data, addres
     return address_1, address_2, distance
 
 
+def calculate_return_trip(truck, last_package_address, depot_address, distances, addresses):
+    depot_address_index = None
+    last_package_address_index = None
+
+    # Find the address indexes
+    for address in addresses:
+        if address[2] == depot_address:
+            depot_address_index = address[0]
+        if address[2] == last_package_address:
+            last_package_address_index = address[0]
+        if depot_address_index is not None and last_package_address_index is not None:
+            break
+
+    _, _, return_distance = distance_between_addresses(last_package_address_index, depot_address_index, distances, addresses)
+
+    if return_distance is not None:  # if there is a valid distance
+        return_time = datetime.timedelta(hours=return_distance / truck.velocity)
+        truck.current_time += return_time
+        truck.total_distance += return_distance
+
+    return truck
+
+
 def calculate_route(truck, hashtable, addresses, distances):
-    print("Addresses:", addresses)
-    print("Distances:", distances)
     not_delivered = []
     truck_address_index = None
 
@@ -114,15 +135,18 @@ def calculate_route(truck, hashtable, addresses, distances):
         truck.shipments.append(nearest_package.package_id)
         not_delivered.remove(nearest_package)
 
-        if nearest_distance < float('inf'):  # only add to total_distance if it's not inf
-            delivery_time = datetime.timedelta(hours=nearest_distance / truck.velocity)
-            truck.current_time += delivery_time
-            total_distance += nearest_distance
+        distance_travelled = nearest_distance if truck.current_address != nearest_package.address else 0
 
-        truck.current_address = nearest_package.address
+        # only add to total_distance if it's not inf AND the truck's current address changes
+        if distance_travelled > 0:
+            delivery_time = datetime.timedelta(hours=distance_travelled / truck.velocity)
+            truck.current_time += delivery_time
+            total_distance += distance_travelled
 
         print("Truck {} delivered package {} to {} at {}. Distance traveled: {}".format(
-            truck.id, nearest_package.package_id, nearest_package.address, truck.current_time, nearest_distance))
+            truck.id, nearest_package.package_id, nearest_package.address, truck.current_time, distance_travelled))
+
+        truck.current_address = nearest_package.address
 
     truck.total_distance = total_distance
 
@@ -150,8 +174,19 @@ def main():
 
     vehicle1, distance1 = calculate_route(vehicle1, ht, addresses, distances)
     vehicle2, distance2 = calculate_route(vehicle2, ht, addresses, distances)
-    vehicle3, distance3 = calculate_route(vehicle3, ht, addresses, distances)
 
+    depot_address = "4001 South 700 East"  # set this to the correct depot address
+    vehicle1 = calculate_return_trip(vehicle1, vehicle1.current_address, depot_address, distances, addresses)
+    vehicle2 = calculate_return_trip(vehicle2, vehicle2.current_address, depot_address, distances, addresses)
+
+    if vehicle1.current_time <= vehicle2.current_time:
+        vehicle3.start_time = vehicle1.current_time
+        distance1 = vehicle1.total_distance  # update distance1 to include return trip
+    else:
+        vehicle3.start_time = vehicle2.current_time
+        distance2 = vehicle2.total_distance  # update distance2 to include return trip
+
+    vehicle3, distance3 = calculate_route(vehicle3, ht, addresses, distances)
     # Calculate total distance for all three trucks
     total_distance = distance1 + distance2 + distance3
     print("Total distance traveled for all three trucks: {}".format(round(total_distance, 1)))
