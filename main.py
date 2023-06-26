@@ -190,13 +190,13 @@ def main():
     addresses = load_address_data('Data/Addresses.csv')
 
     # Create vehicle objects
-    vehicle1 = Vehicle(1, 16, 18, None, [1, 13, 14, 15, 16, 20, 29, 30, 31, 34, 37, 40], 0.0,
+    vehicle1 = Vehicle(1, 16, 18, None, [15, 37, 31, 16, 29, 34, 40, 14, 1, 13, 20, 30], 0.0,
                        datetime.timedelta(hours=8), "4001 South 700 East")
 
-    vehicle2 = Vehicle(2, 16, 18, None, [3, 6, 12, 17, 18, 19, 21, 22, 23, 24, 26, 27, 35, 36, 38, 39], 0.0,
+    vehicle2 = Vehicle(2, 16, 18, None, [39, 18, 22, 21, 35, 36, 26, 19, 3, 6, 17, 12, 27, 38, 24, 23], 0.0,
                        datetime.timedelta(hours=10, minutes=20), "4001 South 700 East")
 
-    vehicle3 = Vehicle(3, 16, 18, None, [2, 4, 5, 6, 7, 8, 9, 10, 11, 25, 28, 32, 33], 0.0,
+    vehicle3 = Vehicle(3, 16, 18, None, [10, 11, 5, 33, 4, 32, 25, 9, 8, 7, 28, 6, 2], 0.0,
                        datetime.timedelta(hours=9, minutes=5), "4001 South 700 East")
 
     vehicle1, distance1 = calculate_route(vehicle1, ht, addresses, distances)
