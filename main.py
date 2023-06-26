@@ -56,13 +56,10 @@ def load_address_data(filename):
 def check_package_status(hashtable, package_id, time):
     package = hashtable.get(package_id)
     if package:
-        if time < package.delivery_time:
-            return package.status
-        else:
-            return "Delivered"
+        package.update_status(time)
+        return package.status
     else:
         return "Package not found"
-
 
 # The 'distance_between_addresses' function calculates the distance between two addresses given their IDs.
 # It uses list of tuples for address data and list of lists for distance data, both providing O(1) time
@@ -157,6 +154,11 @@ def calculate_route(vehicle, hashtable, addresses, distances):
                 package_address = extract_address(parcel.address, addresses)
                 distance = distance_between_addresses(vehicle_address, package_address, distances, addresses)[2]
 
+                if next_package:
+                    if next_package.departure_time is None:  # This is the first time the package is loaded
+                        next_package.departure_time = vehicle.current_time
+                    next_package.delivery_time = vehicle.current_time  # Updating the delivery time
+
                 if distance <= next_address:
                     next_address = distance
                     next_package = parcel
@@ -180,9 +182,6 @@ def calculate_route(vehicle, hashtable, addresses, distances):
                 next_package.status = "Delivered"
                 next_package.delivered = True
 
-            print("Vehicle {} delivered package {} to {} at {}. Distance traveled: {}".format(
-                vehicle.id, next_package.package_id, next_package.address, vehicle.current_time, distance_travelled))
-
             vehicle.current_address = next_package.address
 
     # Function calls: O(N^2) each due to the time complexity of deliver_packages function
@@ -194,11 +193,30 @@ def calculate_route(vehicle, hashtable, addresses, distances):
     return vehicle, total_distance
 
 
+def get_delivery_details(package):
+    # Prints out delivery details for a specific package
+    return f"Package ID: {package.package_id}\n" \
+           f"Address: {package.address}\n" \
+           f"City: {package.city}\n" \
+           f"State: {package.state}\n" \
+           f"Zip Code: {package.zip_code}\n" \
+           f"Deadline: {package.deadline}\n" \
+           f"Weight: {package.weight}\n" \
+           f"Notes: {package.notes}\n" \
+           f"Delivered: {'Yes' if package.delivered else 'No'}\n"
+
+
 # The 'main' function is the entry point of the program. This function orchestrates the whole process
 # of loading the package and distance data, initializing the vehicles, calculating the routes,
 # and printing out the results. It uses a hashtable for storing package data and lists for storing
 # addresses and distances.
 def main():
+    print("Welcome to the delivery routing system.")
+    print("Please select an option:")
+    print("1: Check the status of a package at a specific time.")
+    print("2: Check delivery details for a specific package.")
+    print("3: Show all delivery details.")
+    user_input = int(input("Your choice: "))
     # Create a hashtable with 20 buckets
     ht = HashTable()
     distances = load_distance_data('Data/Distances.csv')
@@ -248,18 +266,40 @@ def main():
     vehicle3, distance3 = calculate_route(vehicle3, ht, addresses, distances)
     # Calculate total distance for all three vehicles
     total_distance = distance1 + distance2 + distance3
-    print("Total distance traveled for all three vehicles: {}".format(round(total_distance, 1)))
 
-    # Output the shipments of each vehicle
-    print("Vehicle 1 shipments: ", vehicle1.shipments)
-    print("Vehicle 2 shipments: ", vehicle2.shipments)
-    print("Vehicle 3 shipments: ", vehicle3.shipments)
-    print("Vehicle 1 current time: ", vehicle1.current_time)
-    print("Vehicle 2 current time: ", vehicle2.current_time)
-    print("Vehicle 3 current time: ", vehicle3.current_time)
-    print("Vehicle 1 total distance: ", vehicle1.total_distance)
-    print("Vehicle 2 total distance: ", vehicle2.total_distance)
-    print("Vehicle 3 total distance: ", vehicle3.total_distance)
+    if user_input == 1:
+        package_id = int(input("Please enter a package id: "))
+        time_str = input("Please enter a time (HH:MM:SS): ")
+        time_obj = datetime.datetime.strptime(time_str, '%H:%M:%S')
+        # Assuming package_status function is defined, which accepts time_obj and returns package status at that time.
+        package = ht.get(package_id)
+        print(check_package_status(ht, package_id, time_obj))
+
+    elif user_input == 2:
+        package_id = int(input("Please enter a package id: "))
+        # Assuming package_delivery_details function is defined, which accepts package_id and returns delivery details.
+        package = ht.get(package_id)
+        if package:
+            print(get_delivery_details(package))
+        else:
+            print("Package not found.")
+
+    elif user_input == 3:
+        print("Total distance traveled for all three vehicles: {}".format(round(total_distance, 1)))
+
+        # Output the shipments of each vehicle
+        print("Vehicle 1 shipments: ", vehicle1.shipments)
+        print("Vehicle 2 shipments: ", vehicle2.shipments)
+        print("Vehicle 3 shipments: ", vehicle3.shipments)
+        print("Vehicle 1 current time: ", vehicle1.current_time)
+        print("Vehicle 2 current time: ", vehicle2.current_time)
+        print("Vehicle 3 current time: ", vehicle3.current_time)
+        print("Vehicle 1 total distance: ", vehicle1.total_distance)
+        print("Vehicle 2 total distance: ", vehicle2.total_distance)
+        print("Vehicle 3 total distance: ", vehicle3.total_distance)
+
+    else:
+        print("Invalid option. Please choose a number between 1 and 3.")
 
 
 if __name__ == "__main__":
