@@ -133,43 +133,52 @@ def extract_address(address, addresses):
 # The time complexity is O(n^2), as there is a loop inside a loop, where n is the number of packages.
 def calculate_route(vehicle, hashtable, addresses, distances):
     not_delivered = []
+    eod_delivered = [] # packages with a delivery deadline of EOD
     for packageID in vehicle.shipments:
         package = hashtable.get(packageID)
-        not_delivered.append(package)
+        if package.deadline == 'EOD':
+            eod_delivered.append(package)
+        else:
+            not_delivered.append(package)
 
     vehicle.shipments.clear()
     total_distance = 0.0
 
-    while len(not_delivered) > 0:
-        next_address = float('inf')
-        next_package = None
+    def deliver_packages(package_list):
+        nonlocal total_distance
+        while len(package_list) > 0:
+            next_address = float('inf')
+            next_package = None
 
-        for package in not_delivered:
-            vehicle_address = extract_address(vehicle.current_address, addresses)
-            package_address = extract_address(package.address, addresses)
-            distance = distance_between_addresses(vehicle_address, package_address, distances, addresses)[2]
+            for package in package_list:
+                vehicle_address = extract_address(vehicle.current_address, addresses)
+                package_address = extract_address(package.address, addresses)
+                distance = distance_between_addresses(vehicle_address, package_address, distances, addresses)[2]
 
-            if distance <= next_address:
-                next_address = distance
-                next_package = package
+                if distance <= next_address:
+                    next_address = distance
+                    next_package = package
 
-        vehicle.shipments.append(next_package.package_id)
-        not_delivered.remove(next_package)
+            vehicle.shipments.append(next_package.package_id)
+            package_list.remove(next_package)
 
-        distance_travelled = next_address if vehicle.current_address != next_package.address else 0
+            distance_travelled = next_address if vehicle.current_address != next_package.address else 0
 
-        if distance_travelled > 0:
-            delivery_time = datetime.timedelta(hours=distance_travelled / vehicle.velocity)
-            vehicle.current_time += delivery_time
-            total_distance += distance_travelled
+            if distance_travelled > 0:
+                delivery_time = datetime.timedelta(hours=distance_travelled / vehicle.velocity)
+                vehicle.current_time += delivery_time
+                total_distance += distance_travelled
 
-        print("vehicle {} delivered package {} to {} at {}. Distance traveled: {}".format(
-            vehicle.id, next_package.package_id, next_package.address, vehicle.current_time, distance_travelled))
+            print("vehicle {} delivered package {} to {} at {}. Distance traveled: {}".format(
+                vehicle.id, next_package.package_id, next_package.address, vehicle.current_time, distance_travelled))
 
-        vehicle.current_address = next_package.address
+            vehicle.current_address = next_package.address
+
+    # Deliver packages with deadlines before EOD first, then deliver EOD packages
+    deliver_packages(not_delivered)
+    deliver_packages(eod_delivered)
 
     vehicle.total_distance = total_distance
-
     return vehicle, total_distance
 
 
