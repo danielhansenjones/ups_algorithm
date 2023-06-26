@@ -125,32 +125,34 @@ def extract_address(address, addresses):
             return int(row[0])
 
 
-# The 'calculate_route' function calculates the delivery route for a vehicle. It uses a hashtable for
-# storing package data and lists for storing addresses and distances. This function first finds the
-# packages that need to be delivered and then, in a loop, finds the next closest package, calculates
-# the delivery time, and updates the vehicle's current time and total distance.
-# This is a variation of the Greedy algorithm where the nearest neighbour is chosen for each step.
-# The time complexity is O(n^2), as there is a loop inside a loop, where n is the number of packages.
 def calculate_route(vehicle, hashtable, addresses, distances):
-    not_delivered = []
-    eod_delivered = [] # packages with a delivery deadline of EOD
+    # We use two lists to separate the packages with a deadline before EOD and those with a deadline of EOD
+    # Time Complexity: O(N) for iterating over each package in vehicle.shipments
+    not_delivered = []  # packages with a deadline before EOD
+    eod_delivered = []  # packages with a delivery deadline of EOD
+
     for packageID in vehicle.shipments:
+        # Hashtable retrieval: O(1) time complexity
         package = hashtable.get(packageID)
         if package.deadline == 'EOD':
             eod_delivered.append(package)
         else:
             not_delivered.append(package)
 
+    # Clearing list: O(1) time complexity
     vehicle.shipments.clear()
     total_distance = 0.0
 
+    # Define a helper function to deliver packages. It updates the total_distance as a side effect.
+    # Time complexity for the function as a whole is O(N^2) due to the nested loop
     def deliver_packages(package_list):
         nonlocal total_distance
-        while len(package_list) > 0:
+        while len(package_list) > 0:  # O(N)
             next_address = float('inf')
             next_package = None
 
-            for parcel in package_list:
+            for parcel in package_list:  # O(N)
+                # Assuming both extract_address and distance_between_addresses functions have O(1) time complexity
                 vehicle_address = extract_address(vehicle.current_address, addresses)
                 package_address = extract_address(parcel.address, addresses)
                 distance = distance_between_addresses(vehicle_address, package_address, distances, addresses)[2]
@@ -159,12 +161,14 @@ def calculate_route(vehicle, hashtable, addresses, distances):
                     next_address = distance
                     next_package = parcel
 
+            # Appending and removing from list: O(1) time complexity
             vehicle.shipments.append(next_package.package_id)
-            package_list.remove(next_package)
+            package_list.remove(next_package)  # Note: Removing an element from a list can be O(N) in worst case
 
             distance_travelled = next_address if vehicle.current_address != next_package.address else 0
 
             if distance_travelled > 0:
+                # Assuming timedelta operation has O(1) time complexity
                 delivery_time = datetime.timedelta(hours=distance_travelled / vehicle.velocity)
                 vehicle.current_time += delivery_time
                 total_distance += distance_travelled
@@ -174,10 +178,11 @@ def calculate_route(vehicle, hashtable, addresses, distances):
 
             vehicle.current_address = next_package.address
 
-    # Deliver packages with deadlines before EOD first, then deliver EOD packages
+    # Function calls: O(N^2) each due to the time complexity of deliver_packages function
     deliver_packages(not_delivered)
     deliver_packages(eod_delivered)
 
+    # Assignment: O(1) time complexity
     vehicle.total_distance = total_distance
     return vehicle, total_distance
 
@@ -203,7 +208,7 @@ def main():
     vehicle1 = Vehicle(1, 16, 18, None, [15, 37, 31, 16, 29, 34, 40, 14, 1, 13, 20, 30], 0.0,
                        datetime.timedelta(hours=8), "4001 South 700 East")
 
-    vehicle2 = Vehicle(2, 16, 18, None, [6, 18, 22, 21, 35, 36, 26, 19, 3, 39,  17, 12, 27, 38, 24, 23], 0.0,
+    vehicle2 = Vehicle(2, 16, 18, None, [6, 18, 22, 21, 35, 36, 26, 19, 3, 39, 17, 12, 27, 38, 24, 23], 0.0,
                        datetime.timedelta(hours=10, minutes=20), "4001 South 700 East")
 
     vehicle3 = Vehicle(3, 16, 18, None, [10, 11, 5, 33, 4, 32, 25, 9, 8, 7, 28, 6, 2], 0.0,
