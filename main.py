@@ -161,6 +161,9 @@ def calculate_route(vehicle, hashtable, addresses, distances):
                     next_address = distance
                     next_package = parcel
 
+            # Update the package status to "Enroute"
+            next_package.status = "Enroute"
+
             # Appending and removing from list: O(1) time complexity
             vehicle.shipments.append(next_package.package_id)
             package_list.remove(next_package)  # Note: Removing an element from a list can be O(N) in worst case
@@ -173,7 +176,11 @@ def calculate_route(vehicle, hashtable, addresses, distances):
                 vehicle.current_time += delivery_time
                 total_distance += distance_travelled
 
-            print("vehicle {} delivered package {} to {} at {}. Distance traveled: {}".format(
+                # Update the package status to "Delivered"
+                next_package.status = "Delivered"
+                next_package.delivered = True
+
+            print("Vehicle {} delivered package {} to {} at {}. Distance traveled: {}".format(
                 vehicle.id, next_package.package_id, next_package.address, vehicle.current_time, distance_travelled))
 
             vehicle.current_address = next_package.address
