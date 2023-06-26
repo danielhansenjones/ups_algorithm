@@ -111,68 +111,45 @@ def extract_address(address, addresses):
 
 def calculate_route(truck, hashtable, addresses, distances):
     not_delivered = []
-    truck_address_index = None
-
-    for address in addresses:
-        if address[2] == truck.current_address:
-            truck_address_index = address[0]
-            break
-
-    for shipment in truck.shipments:
-        package = hashtable.get(shipment)
+    for packageID in truck.shipments:
+        package = hashtable.get(packageID)
         not_delivered.append(package)
 
     truck.shipments.clear()
     total_distance = 0.0
 
     while len(not_delivered) > 0:
-        nearest_distance = float('inf')
-        nearest_package = None
-        nearest_package_address_index = None
+        next_address = float('inf')
+        next_package = None
 
         for package in not_delivered:
-            package_address_index = None
-            for address in addresses:
-                if address[2] == package.address:
-                    package_address_index = address[0]
-                    break
+            truck_address = extract_address(truck.current_address, addresses)
+            package_address = extract_address(package.address, addresses)
+            distance = distance_between_addresses(truck_address, package_address, distances, addresses)[2]
 
-            if package_address_index is None:
-                continue
+            if distance <= next_address:
+                next_address = distance
+                next_package = package
 
-            _, _, distance = distance_between_addresses(truck_address_index, package_address_index, distances,
-                                                        addresses)
+        truck.shipments.append(next_package.package_id)
+        not_delivered.remove(next_package)
 
-            if distance is None:
-                distance = float('inf')  # Setting a very high number when distance is None
+        distance_travelled = next_address if truck.current_address != next_package.address else 0
 
-            if distance < nearest_distance:
-                nearest_distance = distance
-                nearest_package = package
-                nearest_package_address_index = package_address_index
-
-        if nearest_package is None:
-            break
-
-        truck.shipments.append(nearest_package.package_id)
-        not_delivered.remove(nearest_package)
-
-        distance_travelled = nearest_distance if truck.current_address != nearest_package.address else 0
-
-        # only add to total_distance if it's not inf AND the truck's current address changes
         if distance_travelled > 0:
             delivery_time = datetime.timedelta(hours=distance_travelled / truck.velocity)
             truck.current_time += delivery_time
             total_distance += distance_travelled
 
         print("Truck {} delivered package {} to {} at {}. Distance traveled: {}".format(
-            truck.id, nearest_package.package_id, nearest_package.address, truck.current_time, distance_travelled))
+            truck.id, next_package.package_id, next_package.address, truck.current_time, distance_travelled))
 
-        truck.current_address = nearest_package.address
+        truck.current_address = next_package.address
 
     truck.total_distance = total_distance
 
     return truck, total_distance
+
 
 
 def total_distance(route, addresses, distances):
@@ -206,20 +183,20 @@ def main():
     ht = HashTable()
     distances = load_distance_data('Data/Distances.csv')
     # Floyd-Warshall algorithm has a time complexity of O(N^3),
-    distances = floyd_warshall(distances)
+    #distances = floyd_warshall(distances)
     # Load the packages from the CSV file into the hashtable
     load_packages_into_hash(ht, 'Data/Packages.csv')
 
     addresses = load_address_data('Data/Addresses.csv')
 
     # Create vehicle objects
-    vehicle1 = Vehicle(1, 16, 18, None, [15, 13, 20, 37, 14, 34, 30, 16, 31, 40, 7, 6, 32], 0.0,
+    vehicle1 = Vehicle(1, 16, 18, None, [1, 13, 14, 15, 16, 20, 29, 30, 31, 34, 37, 40], 0.0,
                        datetime.timedelta(hours=8), "4001 South 700 East")
 
-    vehicle2 = Vehicle(2, 16, 18, None, [3, 18, 36, 38, 23, 27, 35, 24, 19, 17, 21, 22, 26, 2, 33], 0.0,
+    vehicle2 = Vehicle(2, 16, 18, None, [3, 6, 12, 17, 18, 19, 21, 22, 23, 24, 26, 27, 35, 36, 38, 39], 0.0,
                        datetime.timedelta(hours=10, minutes=20), "4001 South 700 East")
 
-    vehicle3 = Vehicle(3, 16, 18, None, [5, 8, 11, 28, 25, 12, 4, 9, 1, 29, 10, 39], 0.0,
+    vehicle3 = Vehicle(3, 16, 18, None, [2, 4, 5, 6, 7, 8, 9, 10, 11, 25, 28, 32, 33], 0.0,
                        datetime.timedelta(hours=9, minutes=5), "4001 South 700 East")
 
     vehicle1, distance1 = calculate_route(vehicle1, ht, addresses, distances)
