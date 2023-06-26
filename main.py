@@ -18,6 +18,7 @@ def load_packages_into_hash(hashtable, filename):
 
             hashtable.set(key, package)
 
+
 def load_distance_data(filename):
     distances = []
     with open(filename, newline='') as csvfile:
@@ -67,7 +68,7 @@ def distance_between_addresses(address_id_1, address_id_2, distance_data, addres
     return address_1, address_2, distance
 
 
-def calculate_return_trip(truck, last_package_address, depot_address, distances, addresses):
+def calculate_return_trip(vehicle, last_package_address, depot_address, distances, addresses):
     depot_address_index = None
     last_package_address_index = None
 
@@ -84,11 +85,11 @@ def calculate_return_trip(truck, last_package_address, depot_address, distances,
                                                        addresses)
 
     if return_distance is not None:  # if there is a valid distance
-        return_time = datetime.timedelta(hours=return_distance / truck.velocity)
-        truck.current_time += return_time
-        truck.total_distance += return_distance
+        return_time = datetime.timedelta(hours=return_distance / vehicle.velocity)
+        vehicle.current_time += return_time
+        vehicle.total_distance += return_distance
 
-    return truck
+    return vehicle
 
 
 def extract_address(address, addresses):
@@ -97,13 +98,13 @@ def extract_address(address, addresses):
             return int(row[0])
 
 
-def calculate_route(truck, hashtable, addresses, distances):
+def calculate_route(vehicle, hashtable, addresses, distances):
     not_delivered = []
-    for packageID in truck.shipments:
+    for packageID in vehicle.shipments:
         package = hashtable.get(packageID)
         not_delivered.append(package)
 
-    truck.shipments.clear()
+    vehicle.shipments.clear()
     total_distance = 0.0
 
     while len(not_delivered) > 0:
@@ -111,41 +112,32 @@ def calculate_route(truck, hashtable, addresses, distances):
         next_package = None
 
         for package in not_delivered:
-            truck_address = extract_address(truck.current_address, addresses)
+            vehicle_address = extract_address(vehicle.current_address, addresses)
             package_address = extract_address(package.address, addresses)
-            distance = distance_between_addresses(truck_address, package_address, distances, addresses)[2]
+            distance = distance_between_addresses(vehicle_address, package_address, distances, addresses)[2]
 
             if distance <= next_address:
                 next_address = distance
                 next_package = package
 
-        truck.shipments.append(next_package.package_id)
+        vehicle.shipments.append(next_package.package_id)
         not_delivered.remove(next_package)
 
-        distance_travelled = next_address if truck.current_address != next_package.address else 0
+        distance_travelled = next_address if vehicle.current_address != next_package.address else 0
 
         if distance_travelled > 0:
-            delivery_time = datetime.timedelta(hours=distance_travelled / truck.velocity)
-            truck.current_time += delivery_time
+            delivery_time = datetime.timedelta(hours=distance_travelled / vehicle.velocity)
+            vehicle.current_time += delivery_time
             total_distance += distance_travelled
 
-        print("Truck {} delivered package {} to {} at {}. Distance traveled: {}".format(
-            truck.id, next_package.package_id, next_package.address, truck.current_time, distance_travelled))
+        print("vehicle {} delivered package {} to {} at {}. Distance traveled: {}".format(
+            vehicle.id, next_package.package_id, next_package.address, vehicle.current_time, distance_travelled))
 
-        truck.current_address = next_package.address
+        vehicle.current_address = next_package.address
 
-    truck.total_distance = total_distance
+    vehicle.total_distance = total_distance
 
-    return truck, total_distance
-
-
-def total_distance(route, addresses, distances):
-    total = 0
-    for i in range(len(route) - 1):
-        _, _, distance = distance_between_addresses(route[i], route[i + 1], distances, addresses)
-        if distance is not None:
-            total += distance
-    return total
+    return vehicle, total_distance
 
 
 def main():
@@ -183,9 +175,9 @@ def main():
         distance2 = vehicle2.total_distance  # update distance2 to include return trip
 
     vehicle3, distance3 = calculate_route(vehicle3, ht, addresses, distances)
-    # Calculate total distance for all three trucks
+    # Calculate total distance for all three vehicles
     total_distance = distance1 + distance2 + distance3
-    print("Total distance traveled for all three trucks: {}".format(round(total_distance, 1)))
+    print("Total distance traveled for all three vehicles: {}".format(round(total_distance, 1)))
 
     # Output the shipments of each vehicle
     print("Vehicle 1 shipments: ", vehicle1.shipments)
