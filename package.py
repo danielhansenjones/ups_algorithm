@@ -1,3 +1,7 @@
+# The 'Package' class encapsulates all the properties of a package that needs to be delivered.
+# This is an example of Object-Oriented Programming (OOP) where we encapsulate related data
+# and methods into objects.
+
 class Package:
     def __init__(self, package_id, address, city, state, zip_code, deadline, weight, notes):
         self.package_id = package_id

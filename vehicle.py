@@ -1,6 +1,10 @@
 import datetime
 
 
+# The 'Vehicle' class encapsulates all the properties of a vehicle used for package delivery.
+# This is an example of Object-Oriented Programming (OOP) where we encapsulate related data
+# and methods into objects.
+
 class Vehicle:
     def __init__(self, id, max_load, velocity, cargo, shipments, distance_travelled, departure_time,
                  current_address=None):
@@ -20,7 +24,3 @@ class Vehicle:
                                                            self.shipments, self.distance_travelled,
                                                            self.departure_time, self.current_address,
                                                            self.current_time, self.distance_travelled)
-
-    def update_time(self, travel_time):
-        self.departure_time += datetime.timedelta(hours=travel_time)
-
