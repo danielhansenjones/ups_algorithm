@@ -18,18 +18,6 @@ def load_packages_into_hash(hashtable, filename):
 
             hashtable.set(key, package)
 
-
-def floyd_warshall(distances):
-    num_nodes = len(distances)
-    for k in range(num_nodes):
-        for i in range(num_nodes):
-            for j in range(num_nodes):
-                if distances[i][k] is not None and distances[k][j] is not None:
-                    if distances[i][j] is None or distances[i][j] > distances[i][k] + distances[k][j]:
-                        distances[i][j] = distances[i][k] + distances[k][j]
-    return distances
-
-
 def load_distance_data(filename):
     distances = []
     with open(filename, newline='') as csvfile:
@@ -151,39 +139,20 @@ def calculate_route(truck, hashtable, addresses, distances):
     return truck, total_distance
 
 
-
 def total_distance(route, addresses, distances):
     total = 0
     for i in range(len(route) - 1):
-        _, _, distance = distance_between_addresses(route[i], route[i+1], distances, addresses)
+        _, _, distance = distance_between_addresses(route[i], route[i + 1], distances, addresses)
         if distance is not None:
             total += distance
     return total
-
-
-def two_opt(route):
-    best = route
-    improved = True
-    while improved:
-        improved = False
-        for i in range(1, len(route) - 2):
-            for j in range(i + 1, len(route)):
-                if j - i == 1: continue  # changes nothing, skip then
-                new_route = route[:]
-                new_route[i:j] = route[j - 1:i - 1:-1]  # this is the 2-optSwap
-                if total_distance(new_route) < total_distance(best):
-                    best = new_route
-                    improved = True
-        route = best
-    return best
 
 
 def main():
     # Create a hashtable with 20 buckets
     ht = HashTable()
     distances = load_distance_data('Data/Distances.csv')
-    # Floyd-Warshall algorithm has a time complexity of O(N^3),
-    #distances = floyd_warshall(distances)
+
     # Load the packages from the CSV file into the hashtable
     load_packages_into_hash(ht, 'Data/Packages.csv')
 
