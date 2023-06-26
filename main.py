@@ -150,14 +150,14 @@ def calculate_route(vehicle, hashtable, addresses, distances):
             next_address = float('inf')
             next_package = None
 
-            for package in package_list:
+            for parcel in package_list:
                 vehicle_address = extract_address(vehicle.current_address, addresses)
-                package_address = extract_address(package.address, addresses)
+                package_address = extract_address(parcel.address, addresses)
                 distance = distance_between_addresses(vehicle_address, package_address, distances, addresses)[2]
 
                 if distance <= next_address:
                     next_address = distance
-                    next_package = package
+                    next_package = parcel
 
             vehicle.shipments.append(next_package.package_id)
             package_list.remove(next_package)
