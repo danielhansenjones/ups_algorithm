@@ -21,9 +21,11 @@ class Package:
     def update_status(self, convert_datetime):
         # Convert datetime to timedelta since midnight
         convert_timedelta = datetime.combine(date.min, convert_datetime.time()) - datetime.min
-        if self.delivery_time < convert_timedelta:
+
+        if self.delivery_time is not None and self.delivery_time < convert_timedelta:
             self.status = "Delivered"
-        elif self.departure_time > convert_timedelta:
+        elif self.departure_time is not None and self.departure_time > convert_timedelta:
             self.status = "En route"
         else:
             self.status = "At Hub"
+
