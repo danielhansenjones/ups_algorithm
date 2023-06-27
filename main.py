@@ -38,7 +38,7 @@ def load_distance_data(filename):
 
 # The 'load_address_data' function reads data from a CSV file and stores it into a list of tuples.
 # This is a suitable data structure because it allows us to store and access related data in a structured format.
-# The time complexity for accessing an element is O(1), making it a v
+# The time complexity for accessing an element is O(1).
 def load_address_data(filename):
     addresses = []
     with open(filename, newline='') as csvfile:
