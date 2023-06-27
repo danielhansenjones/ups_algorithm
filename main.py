@@ -300,7 +300,8 @@ def main():
                 print(f"Vehicle {vehicle.id} shipments: {vehicle.shipments}")
                 print(f"Vehicle {vehicle.id} ending time: {vehicle.current_time}")
                 print(f"Vehicle {vehicle.id} total distance: {vehicle.total_distance}")
-            print(f"Total distance traveled: {total_distance}")
+            print(f"Total distance traveled: {round(total_distance, 1)}")
+
 
         elif user_input == 3:
             print("Closing the program.")
@@ -314,4 +315,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
