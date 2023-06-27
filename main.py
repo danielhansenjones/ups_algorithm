@@ -260,9 +260,9 @@ def main():
     total_distance = distance1 + distance2 + distance3
 
     while True:
-        user_input = int(input("Your choice: "))
+        user_input = (input("Your choice: "))
 
-        if user_input == 1:
+        if user_input == "1":
             # Option 1 implementation
             time_str = input("Please enter a time (HH:MM:SS): ")
             try:
@@ -295,7 +295,7 @@ def main():
             except ValueError:
                 print("Invalid time format. Please enter a valid time (HH:MM:SS).")
 
-        elif user_input == 2:
+        elif user_input == "2":
             for vehicle in [vehicle1, vehicle2, vehicle3]:
                 print(f"Vehicle {vehicle.id} shipments: {vehicle.shipments}")
                 print(f"Vehicle {vehicle.id} ending time: {vehicle.current_time}")
@@ -303,7 +303,7 @@ def main():
             print(f"Total distance traveled: {round(total_distance, 1)}")
 
 
-        elif user_input == 3:
+        elif user_input == "3":
             print("Closing the program.")
             break  # Exit the loop and end the program
 
