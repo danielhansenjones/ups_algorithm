@@ -222,7 +222,7 @@ def main():
     print("Welcome to the delivery routing system.")
     print("Please select an option:")
     print("1: Check the status of a package(s) at a specific time.")
-    print("2: Show all delivery details.")
+    print("2: Show delivery details including mileage.")
     print("3: Close the program.")
 
     ht = HashTable()
@@ -301,7 +301,6 @@ def main():
                 print(f"Vehicle {vehicle.id} ending time: {vehicle.current_time}")
                 print(f"Vehicle {vehicle.id} total distance: {vehicle.total_distance}")
             print(f"Total distance traveled: {round(total_distance, 1)}")
-
 
         elif user_input == "3":
             print("Closing the program.")
