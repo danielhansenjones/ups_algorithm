@@ -214,69 +214,116 @@ def get_delivery_details(package):
     return details
 
 
-
-
 # The 'main' function is the entry point of the program. This function orchestrates the whole process
 # of loading the package and distance data, initializing the vehicles, calculating the routes,
 # and printing out the results. It uses a hashtable for storing package data and lists for storing
 # addresses and distances.
 def main():
     print("Welcome to the delivery routing system.")
+    print("Please select an option:")
+    print("1: Check the status of a package(s) at a specific time.")
+    print("2: Check delivery details for a specific package.")
+    print("3: Show all delivery details.")
+    user_input = int(input("Your choice: "))
+    # Create a hashtable with 20 buckets
     ht = HashTable()
     distances = load_distance_data('Data/Distances.csv')
+
+    # Load the packages from the CSV file into the hashtable
     load_packages_into_hash(ht, 'Data/Packages.csv')
+
+    # The list structure allows efficient iteration through all addresses when needed.
     addresses = load_address_data('Data/Addresses.csv')
-    vehicle1 = Vehicle(1, 16, 18, None, [15, 37, 31, 16, 29, 34, 40, 14, 1, 13, 20, 30], 0.0, datetime.timedelta(hours=8), "4001 South 700 East")
-    vehicle2 = Vehicle(2, 16, 18, None, [6, 18, 22, 21, 35, 36, 26, 19, 3, 39, 17, 12, 27, 38, 24, 23], 0.0, datetime.timedelta(hours=10, minutes=20), "4001 South 700 East")
-    vehicle3 = Vehicle(3, 16, 18, None, [10, 11, 5, 33, 4, 32, 25, 9, 8, 7, 28, 6, 2], 0.0, datetime.timedelta(hours=9, minutes=5), "4001 South 700 East")
 
-    # The `calculate_route` function and other necessary calculations
+    # Vehicle objects are created with specified properties including maximum capacity, velocity,
+    # initial shipments, etc. Object-Oriented Programming (OOP) is used here to encapsulate related data
+    # and methods into objects.
+    vehicle1 = Vehicle(1, 16, 18, None, [15, 37, 31, 16, 29, 34, 40, 14, 1, 13, 20, 30], 0.0,
+                       datetime.timedelta(hours=8), "4001 South 700 East")
 
-    user_input = 0
+    vehicle2 = Vehicle(2, 16, 18, None, [6, 18, 22, 21, 35, 36, 26, 19, 3, 39, 17, 12, 27, 38, 24, 23], 0.0,
+                       datetime.timedelta(hours=10, minutes=20), "4001 South 700 East")
 
-    while user_input != 3:
-        print("Please select an option:")
-        print("1: Check the status of a package(s) at a specific time.")
-        print("2: Check delivery details for a specific package.")
-        print("3: Exit the program.")
-        user_input = int(input("Your choice: "))
+    vehicle3 = Vehicle(3, 16, 18, None, [10, 11, 5, 33, 4, 32, 25, 9, 8, 7, 28, 6, 2], 0.0,
+                       datetime.timedelta(hours=9, minutes=5), "4001 South 700 East")
 
-        if user_input == 1:
-            # Option 1 implementation
+    # The `calculate_route` function calculates the delivery route for each vehicle and returns the
+    # vehicle object and the total distance traveled.
+    vehicle1, distance1 = calculate_route(vehicle1, ht, addresses, distances)
+    vehicle2, distance2 = calculate_route(vehicle2, ht, addresses, distances)
+
+    # The `calculate_return_trip` function calculates the return trip of each vehicle from its last
+    # delivery address back to the depot.
+    depot_address = "4001 South 700 East"
+
+    vehicle1, return_time1 = calculate_return_trip(vehicle1, vehicle1.current_address, depot_address, distances,
+                                                   addresses)
+    vehicle2, return_time2 = calculate_return_trip(vehicle2, vehicle2.current_address, depot_address, distances,
+
+                                                   addresses)
+    # The start time for the third vehicle is determined based on the return times of the first two vehicles.
+    # The third vehicle starts after the vehicle that returns earlier.
+    if return_time1 <= return_time2:
+        vehicle3.start_time = return_time1
+        vehicle3.current_time = return_time1
+    else:
+        vehicle3.start_time = return_time2
+        vehicle3.current_time = return_time2
+
+    # Here, start vehicle3's journey after finding the truck that returned first and updated the return time.
+    vehicle3, distance3 = calculate_route(vehicle3, ht, addresses, distances)
+    # Calculate total distance for all three vehicles
+    total_distance = distance1 + distance2 + distance3
+
+    if user_input == 1:
+        while True:
             time_str = input("Please enter a time (HH:MM:SS): ")
             try:
                 time_obj = datetime.datetime.strptime(time_str, '%H:%M:%S')
-                package_option = input("Do you want to view 1) Specific package 2) All packages? ")
-
-                if package_option == '2':
-                    for bucket in ht.table:
-                        for package_id, package in bucket:
-                            print(get_delivery_details(package))
-                            print("Status at {}: {}".format(time_obj.time(), check_package_status(ht, package_id, time_obj)))
-                            print("\n")
-                elif package_option == '1':
-                    package_id = int(input("Please enter a package id: "))
-                    package = ht.get(package_id)
-                    if package:
-                        print(get_delivery_details(package))
-                        print("Status at {}: {}".format(time_obj.time(), check_package_status(ht, package_id, time_obj)))
-                    else:
-                        print("Package not found.")
-                else:
-                    print("Invalid option")
+                break  # If the conversion is successful, break the loop.
             except ValueError:
                 print("Invalid time format. Please enter a valid time (HH:MM:SS).")
 
-        elif user_input == 2:
-            # Option 2 implementation
-            for vehicle in [vehicle1, vehicle2, vehicle3]:
-                print(f"Vehicle {vehicle.id} shipments: {vehicle.shipments}")
-                print(f"Vehicle {vehicle.id} ending time: {vehicle.current_time}")
-                print(f"Vehicle {vehicle.id} total distance: {vehicle.total_distance}")
+        package_option = input("Do you want to view 1) Specific package 2) All packages? ")
 
-        elif user_input == 3:
-            print("Exiting the program.")
-            break  # Exit the while loop and end the program
+        if package_option == '2':
+            # Iterate over all items in the HashTable
+            for bucket in ht.table:
+                for package_id, package in bucket:
+                    print(get_delivery_details(package))
+                    print("Status at {}: {}".format(time_obj.time(), check_package_status(ht, package_id, time_obj)))
+                    print("\n")  # Add a newline for readability
+        elif package_option == '1':
+            package_id = int(input("Please enter a package id: "))
+            package = ht.get(package_id)
+            if package:
+                print(get_delivery_details(package))
+                print("Status at {}: {}".format(time_obj, check_package_status(ht, package_id, time_obj)))
+            else:
+                print("Package not found.")
+        else:
+            print("Invalid option")
+
+    elif user_input == 2:
+        # Output the shipments of each vehicle
+        for vehicle in [vehicle1, vehicle2, vehicle3]:
+            print(f"Vehicle {vehicle.id} shipments: {vehicle.shipments}")
+            print(f"Vehicle {vehicle.id} ending time: {vehicle.current_time}")
+            print(f"Vehicle {vehicle.id} total distance: {vehicle.total_distance}")
+
+    elif user_input == 3:
+        package_id = int(input("Please enter a package id: "))
+        # Assuming package_delivery_details function is defined, which accepts package_id and returns delivery details.
+        package = ht.get(package_id)
+        if package:
+            print(
+                f" delivered package {package.package_id} to {package.address} at {package.delivery_time}. "
+                f"Distance traveled: {package.distance_travelled}")
+        else:
+            print("Package not found.")
+
+    else:
+        print("Invalid option. Please choose a number between 1 and 3.")
 
     print("Thank you for using the delivery routing system.")
 
