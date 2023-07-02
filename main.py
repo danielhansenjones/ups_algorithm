@@ -1,3 +1,8 @@
+# Created by: Daniel Hansen-Jones
+# Student ID: 004636371
+# Date created: 2023/07/01
+# WGU UPS Algorithm Project
+
 import csv
 import datetime
 from HashTable import HashTable
