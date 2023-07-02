@@ -128,6 +128,9 @@ def extract_address(address, addresses):
             return int(row[0])
 
 
+# This is the core calculation function for the program. It takes in a vehicle, hashtable, addresses, and distances.
+# It first separates the packages into two lists based on their delivery deadlines. Then it delivers the packages.
+# This function is explained more throughout due to its complexity.
 def calculate_route(vehicle, hashtable, addresses, distances):
     # We use two lists to separate the packages with a deadline before EOD and those with a deadline of EOD
     # Time Complexity: O(N) for iterating over each package in vehicle.shipments
