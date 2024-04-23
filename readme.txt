@@ -1,40 +1,109 @@
-WGU UPS Algorithm Project
-This project is developed by Daniel Hansen-Jones (Student ID: 004636371). It involves creating a routing algorithm for a delivery system similar to UPS, and it was created on 2023/07/01.
+# WGU UPS Algorithm Project
 
+A routing application that simulates a UPS-style delivery system. This project calculates optimal delivery routes for a fleet of vehicles using various data structures and algorithms, and it provides real-time package status updates.
 
-Developed in Python 3.9.6
-This project was developed in Python 3.9.6, and it requires Python 3.9 or higher to run. It also requires the following Python packages:
-datetime
-csv
+## Table of Contents
 
-Running the Application
-To run the application, open a terminal window and navigate to the project directory. Then run the following command:
-python main.py
+- [Overview](#overview)
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Requirements](#requirements)
+- [Setup and Running the Application](#setup-and-running-the-application)
+- [Running Tests](#running-tests)
+- [Code Improvements](#code-improvements)
+- [Conclusion](#conclusion)
 
+## Overview
 
-Description
-The application loads data from CSV files into a variety of data structures, including hash tables and lists. It uses these structures to quickly calculate optimal delivery routes for a fleet of vehicles, while also allowing users to query the status of individual packages.
+The WGU UPS Algorithm Project is a Python-based application designed to:
+- Load package, distance, and address data from CSV files.
+- Optimize delivery routes for multiple vehicles.
+- Allow users to query individual package statuses in real time.
 
-Features
-Rapid retrieval of package data using a hash table (average time complexity O(1))
-Use of lists to represent distance matrices and address details, allowing efficient data access
-Calculations of distance between two points using their IDs
-Determination of package delivery status at any given time
-Calculation of vehicle routing considering package delivery deadlines and the shortest distance
-Core Functions
-load_packages_into_hash(hashtable, filename): Reads package data from a CSV file and stores it in a hash table.
-load_distance_data(filename): Reads distance data from a CSV file and stores it in a list of lists.
-load_address_data(filename): Reads address data from a CSV file and stores it in a list of tuples.
-check_package_status(hashtable, package_id, time): Checks the status of a package at a given time.
-distance_between_addresses(address_id_1, address_id_2, distance_data, address_data): Calculates the distance between two addresses given their IDs.
-calculate_return_trip(vehicle, last_package_address, depot_address, distances, addresses): Calculates the return trip of a vehicle from its last delivery address back to the depot.
-calculate_route(vehicle, hashtable, addresses, distances): Determines the route for a vehicle to deliver packages while considering delivery deadlines and the shortest distance.
-get_delivery_details(package): Provides delivery details for a specific package.
-main(): The entry point of the program, it loads data, initiates calculations and interactions with the user.
-Getting Started
-The entry point of the application is the main() function, which first loads package and distance data from CSV files. It then initializes three vehicles with their respective shipments, and uses the calculate_route() function to calculate their delivery routes.
+The project was originally developed on 2023/07/01 using Python 3.9.6 and requires Python 3.9 or higher.
 
-Once the data has been loaded and the routes calculated, the application prompts the user with options to check the status of a package(s) at a specific time, show delivery details including mileage, or close the program.
+## Features
 
-Conclusion
-This project uses a combination of data structures and algorithms to implement a complex package delivery system. It is capable of determining the optimal route for package delivery while also providing the ability to query individual package statuses. This functionality makes it a versatile tool for managing a delivery system.
+- **Efficient Data Retrieval:**  
+  Uses a hash table for quick package data lookup with an average time complexity of O(1).
+
+- **Optimized Routing:**  
+  Employs lists to construct distance matrices and address mappings, ensuring quick access and efficient calculations for determining the shortest distances.
+
+- **Dynamic Status Updates:**  
+  Supports real-time query of package statuses based on current operational time.
+
+- **Vehicle Routing:**  
+  Calculates optimal routes that accommodate delivery deadlines, minimizing total travel distance.
+
+## Project Structure
+
+Below is a brief description of the core modules and their purposes:
+
+- **main.py:**  
+  Entry point of the application. Handles data loading, vehicle initialization, route calculation, and user interaction.
+
+- **vehicle.py:**  
+  Contains the `Vehicle` class, which encapsulates properties and behaviors of delivery vehicles.
+
+- **package.py:**  
+  Defines the `Package` class, which includes methods for updating the package status based on delivery and departure times.
+
+- **HashTable.py:**  
+  Implements a custom hash table for package data management, including methods for setting, retrieving, and deleting entries.
+
+## Requirements
+
+- **Python Version:**  
+  Python 3.9 or higher
+
+- **Required Packages:**  
+  - datetime (standard library)
+  - csv (standard library)
+
+Ensure these libraries are installed as part of your Python distribution.
+
+## Setup and Running the Application
+
+1. **Clone the Repository:**  
+   Clone or download the project files to your local environment.
+
+2. **Navigate to the Project Directory:**  
+   Open a terminal and change to the project’s root directory:
+   
+   ```shell
+   cd /path/to/project
+   ```
+
+3. **Run the Application:**  
+   Execute the main script:
+
+   ```shell
+   python main.py
+   ```
+
+## Running Tests
+
+The project includes a suite of unit tests to ensure the integrity of key functionalities. To run the tests, use the following command from the project’s root directory:
+
+```shell
+python -m unittest discover -s tests
+```
+
+This command will automatically discover and run all tests located in the `tests` folder.
+
+## Code Improvements
+
+- **Vehicle Class:**  
+  Consider using f-strings for improved readability in the `__str__` method. For example:
+  
+  ```python
+  def __str__(self):
+      return f"{self.id}, {self.max_load}, {self.velocity}, {self.cargo}, {self.shipments}, {self.distance_travelled}, {self.departure_time}, {self.current_address}, {self.current_time}, {self.total_distance}"
+  ```
+
+## Conclusion
+
+The WGU UPS Algorithm Project combines efficient data structures with real-time routing calculations to manage a complex package delivery system. With continued refinements, this project can serve as a versatile tool for delivery system simulations and logistics management.
+
+Feel free to suggest further improvements or tailor the structure based on your specific requirements. Happy coding!

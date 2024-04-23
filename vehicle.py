@@ -8,7 +8,7 @@ import datetime
 class Vehicle:
     def __init__(self, id, max_load, velocity, cargo, shipments, distance_travelled, departure_time,
                  current_address=None):
-        self.id = id  # Add the id attribute
+        self.id = id
         self.max_load = max_load
         self.velocity = velocity
         self.cargo = cargo
@@ -17,10 +17,11 @@ class Vehicle:
         self.current_address = current_address
         self.departure_time = departure_time
         self.current_time = departure_time
-        self.total_distance = 0.0  # Initialize total distance to zero
+        self.total_distance = 0.0
 
     def __str__(self):
-        return "%s, %s, %s, %s, %s, %s, %s, %s, %s ,%s" % (self.id, self.max_load, self.velocity, self.cargo,
-                                                           self.shipments, self.distance_travelled,
-                                                           self.departure_time, self.current_address,
-                                                           self.current_time, self.distance_travelled)
+        return (f"ID: {self.id}, Max Load: {self.max_load}, Velocity: {self.velocity}, "
+                f"Cargo: {self.cargo}, Shipments: {self.shipments}, Distance Travelled: {self.distance_travelled}, "
+                f"Departure Time: {self.departure_time}, Current Address: {self.current_address}, "
+                f"Current Time: {self.current_time}, Total Distance: {self.total_distance}")
+

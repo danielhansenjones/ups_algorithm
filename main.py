@@ -8,24 +8,46 @@ import datetime
 from HashTable import HashTable
 from vehicle import Vehicle
 from package import Package
+import logging
 
 
 # The 'load_packages_into_hash' function reads data from a CSV file and stores it into a hash table.
 # The hash table is an optimal data structure in this scenario due to its ability to perform
 # lookup, insert and delete operations in O(1) average time complexity. This allows for the
 # rapid retrieval of package data using the package ID.
-def load_packages_into_hash(hashtable, filename):
-    with open(filename, newline='') as csvfile:
-        reader = csv.reader(csvfile)
-        next(reader, None)  # skip the headers
-        for row in reader:
-            package_id, address, city, state, zip_code, deadline, weight, notes = row
+def load_packages_into_hash(hashtable: HashTable, filename: str) -> None:
+    try:
+        with open(filename, newline='') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader, None)
 
-            key = int(package_id)
+            for row in reader:
+                # Skip any empty rows
+                if not row:
+                    continue
 
-            package = Package(package_id, address, city, state, zip_code, deadline, weight, notes)
+                # Ensure the row has the expected number of fields
+                if len(row) != 8:
+                    logging.warning(f"Skipping row {row}: does not have the expected number of values.")
+                    continue
 
-            hashtable.set(key, package)
+                package_id, address, city, state, zip_code, deadline, weight, notes = row
+
+                # Validate and convert package_id to integer
+                try:
+                    key = int(package_id)
+                except ValueError:
+                    print(f"Invalid package ID '{package_id}' encountered; skipping row.")
+                    continue
+
+                # Create a Package instance and store it in the hash table
+                package = Package(package_id, address, city, state, zip_code, deadline, weight, notes)
+                hashtable.set(key, package)
+
+    except FileNotFoundError:
+        logging.error(f"Error: The file '{filename}' was not found.")
+    except Exception as e:
+        print(f"An error occurred while loading packages: {e}")
 
 
 # The 'load_distance_data' function reads the distances from a CSV file and stores it into a list of lists.
