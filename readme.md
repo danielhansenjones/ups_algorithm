@@ -87,20 +87,11 @@ Ensure these libraries are installed as part of your Python distribution.
 The project includes a suite of unit tests to ensure the integrity of key functionalities. To run the tests, use the following command from the project’s root directory:
 
 ```shell
-python -m unittest discover -s tests
+python tests.py
 ```
 
 This command will automatically discover and run all tests located in the `tests` folder.
 
-## Code Improvements
-
-- **Vehicle Class:**  
-  Consider using f-strings for improved readability in the `__str__` method. For example:
-  
-  ```python
-  def __str__(self):
-      return f"{self.id}, {self.max_load}, {self.velocity}, {self.cargo}, {self.shipments}, {self.distance_travelled}, {self.departure_time}, {self.current_address}, {self.current_time}, {self.total_distance}"
-  ```
 
 ## Conclusion
 
